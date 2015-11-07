@@ -2,16 +2,23 @@ package install
 
 import (
 	"bytes"
-	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+
+	"github.com/ChrisMcKenzie/caddy/pkg"
 )
 
 type vcsCmd struct {
 	cmd         string
 	createCmd   []string
 	downloadCmd []string
+}
+
+func NewVcsRetreiver(rawUrl *url.URL) (*vcsCmd, error) {
+	return &GitVcs, nil
 }
 
 var GitVcs = vcsCmd{
@@ -36,24 +43,25 @@ func expand(match map[string]string, s string) string {
 	return s
 }
 
-func Download(dir, repo, version string) error {
+func (v *vcsCmd) Download(dir string, dep pkg.Dependency) error {
 	var err error
-	var out string
-	fmt.Printf("\n\tInstalling %s...", repo)
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		out, err = GitVcs.download(dir, repo, version)
+	fullPath := filepath.Join(dir, dep.Name)
+	host := url.URL{
+		Host:   dep.Hosted.Host,
+		Scheme: dep.Hosted.Scheme,
+		Path:   dep.Hosted.Path,
+	}
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		err = os.MkdirAll(fullPath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+		_, err = v.download(dep.Name, host.String(), dep.Hosted.Fragment)
 	} else {
-		out, err = GitVcs.update(dir, repo, version)
+		_, err = v.update(dep.Name, host.String(), dep.Hosted.Fragment)
 	}
 
-	if err != nil {
-		fmt.Printf(" [\033[0;31mERR\033[0m]\n")
-		fmt.Printf("\tFailed to download dependency: \n\t%s\n", out)
-		return err
-	}
-
-	fmt.Printf(" [\033[0;32mOK\033[0m]\n")
-	return nil
+	return err
 }
 
 func (v *vcsCmd) update(dir, repo, version string) (string, error) {
@@ -61,7 +69,7 @@ func (v *vcsCmd) update(dir, repo, version string) (string, error) {
 		return out, err
 	}
 	for _, cmd := range v.downloadCmd {
-		out, err := v.run(dir, cmd, "dir", dir, "repo", repo, "version", version)
+		out, err := v.run(dir, dir, cmd, "dir", dir, "repo", repo, "version", version)
 		if err != nil {
 			return out, err
 		}
@@ -72,10 +80,8 @@ func (v *vcsCmd) update(dir, repo, version string) (string, error) {
 
 func (v *vcsCmd) download(dir, repo, version string) (string, error) {
 	for _, cmd := range v.createCmd {
-		out, err := v.run(dir, cmd, "dir", dir, "repo", repo, "version", version)
+		out, err := v.run("vendor", dir, cmd, "dir", dir, "repo", repo, "version", version)
 		if err != nil {
-			fmt.Printf(" [\033[0;31mERR\033[0m]\n")
-			fmt.Printf("\tFailed to download dependency: \n\t%s\n", out)
 			return out, err
 		}
 	}
@@ -83,7 +89,7 @@ func (v *vcsCmd) download(dir, repo, version string) (string, error) {
 	return "", nil
 }
 
-func (v *vcsCmd) run(dir, cmdline string, keyval ...string) (string, error) {
+func (v *vcsCmd) run(cwd, dir, cmdline string, keyval ...string) (string, error) {
 	m := make(map[string]string)
 	for i := 0; i < len(keyval); i += 2 {
 		m[keyval[i]] = keyval[i+1]
@@ -94,7 +100,7 @@ func (v *vcsCmd) run(dir, cmdline string, keyval ...string) (string, error) {
 	}
 
 	cmd := exec.Command(v.cmd, args...)
-	cmd.Dir = dir
+	cmd.Dir = cwd
 	var buf bytes.Buffer
 	cmd.Stderr = &buf
 	cmd.Stdout = &buf
@@ -104,5 +110,5 @@ func (v *vcsCmd) run(dir, cmdline string, keyval ...string) (string, error) {
 }
 
 func (v *vcsCmd) fixDetachedHead(dir string) (string, error) {
-	return v.run(dir, "checkout master")
+	return v.run(dir, dir, "checkout master")
 }

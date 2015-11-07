@@ -1,4 +1,4 @@
-package module
+package pkg
 
 import (
 	"encoding/json"
@@ -8,8 +8,11 @@ import (
 )
 
 type Package struct {
-	Name         string            `json:"name"`
-	Dependencies map[string]string `json:"dependencies"`
+	Name            string            `json:"name"`
+	Version         string            `json:"version"`
+	Scripts         map[string]string `json:"scripts"`
+	RawDependencies map[string]string `json:"dependencies"`
+	Dependencies    []Dependency      `json:"-"`
 }
 
 func ReadPackageJSON() (*Package, error) {
@@ -25,6 +28,11 @@ func ReadPackageJSON() (*Package, error) {
 
 	var pkg Package
 	err = json.Unmarshal(p, &pkg)
+	if err != nil {
+		return nil, err
+	}
+
+	pkg.Dependencies, err = parseDependencies(pkg.RawDependencies)
 
 	return &pkg, err
 }

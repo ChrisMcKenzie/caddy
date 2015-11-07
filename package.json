@@ -4,6 +4,9 @@
     "package": "echo hello world"
   },
   "dependencies": {
-    "github.com/spf13/cobra": "master"
+    "github.com/spf13/cobra": "https://github.com/spf13/cobra#master",
+    "github.com/wmark/semver": "https://github.com/wmark/semver#master",
+    "chrismckenzie/caddy-registry-client": "0.0.1"
   }
 }
+
