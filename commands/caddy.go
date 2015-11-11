@@ -20,4 +20,7 @@ func Execute() {
 
 func AddCommands() {
 	caddyCmd.AddCommand(installCmd)
+	caddyCmd.AddCommand(buildCmd)
+	caddyCmd.AddCommand(runCmd)
+	caddyCmd.AddCommand(initCmd)
 }

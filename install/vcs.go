@@ -43,7 +43,7 @@ func expand(match map[string]string, s string) string {
 	return s
 }
 
-func (v *vcsCmd) Download(dir string, dep pkg.Dependency) error {
+func (v *vcsCmd) Download(dir string, dep *pkg.Dependency) error {
 	var err error
 	fullPath := filepath.Join(dir, dep.Name)
 	host := url.URL{

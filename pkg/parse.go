@@ -23,7 +23,7 @@ type Dependency struct {
 func parseDependencies(p map[string]string) ([]Dependency, error) {
 	var deps []Dependency
 	for pkg, version := range p {
-		dep, err := parse(pkg, version)
+		dep, err := Parse(pkg, version)
 		if err != nil {
 			return nil, err
 		}
@@ -33,7 +33,7 @@ func parseDependencies(p map[string]string) ([]Dependency, error) {
 	return deps, nil
 }
 
-func parse(depName, version string) (dep Dependency, err error) {
+func Parse(depName, version string) (dep Dependency, err error) {
 	matches, err := regexp.MatchString(registryModuleRegEx, depName+"@"+version)
 	if err != nil {
 		return

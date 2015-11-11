@@ -23,6 +23,6 @@ func NewRegistryRetreiver(rawUrl, user, pass string) (*RegistryRetreiver, error)
 	return ret, nil
 }
 
-func (r RegistryRetreiver) Download(dir string, dep pkg.Dependency) error {
+func (r RegistryRetreiver) Download(dir string, dep *pkg.Dependency) error {
 	return nil
 }
