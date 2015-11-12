@@ -1,10 +1,10 @@
 {
   "name": "caddy",
   "scripts": {
-    "build": "go build main.go",
     "install": "go install"
   },
   "dependencies": {
+    "chrismckenzie/caddy": "0.0.1",
     "github.com/spf13/cobra": "https://github.com/spf13/cobra#master",
     "github.com/wmark/semver": "https://github.com/wmark/semver#master"
   }

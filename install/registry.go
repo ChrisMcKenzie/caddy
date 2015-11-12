@@ -1,9 +1,14 @@
 package install
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
 	"net/url"
+	"path/filepath"
 
 	"github.com/ChrisMcKenzie/caddy/pkg"
+	"github.com/ChrisMcKenzie/dropship/installer"
 )
 
 type RegistryRetreiver struct {
@@ -24,5 +29,24 @@ func NewRegistryRetreiver(rawUrl, user, pass string) (*RegistryRetreiver, error)
 }
 
 func (r RegistryRetreiver) Download(dir string, dep *pkg.Dependency) error {
-	return nil
+	resp, err := http.Get("http://localhost:5984/caddy/" + dep.Name + "/" + dep.Spec)
+	if err != nil {
+		return err
+	}
+
+	msg, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	var pkg map[string]interface{}
+	err = json.Unmarshal(msg, &pkg)
+
+	dlUrl := pkg["dist"].(map[string]interface{})["url"].(string)
+	resp, err = http.Get(dlUrl)
+
+	var install installer.TarInstaller
+
+	install.Install(filepath.Join(dir, dep.Name), resp.Body)
+
+	return err
 }

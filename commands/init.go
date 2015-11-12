@@ -8,8 +8,15 @@ import (
 )
 
 var initCmd = &cobra.Command{
-	Use: "init",
-	Run: initC,
+	Use:   "init",
+	Short: "initialize a new go package",
+	Run:   initC,
+}
+
+var withBin bool
+
+func init() {
+	initCmd.Flags().BoolVarP(&withBin, "bin", "b", false, "will also create main.go for a binary package")
 }
 
 func initC(cmd *cobra.Command, args []string) {
@@ -34,3 +41,19 @@ func initC(cmd *cobra.Command, args []string) {
 		fmt.Printf("\t  \033[0;31m%s\033[0m\n", err)
 	}
 }
+
+//
+// func createMainFile() {
+// 	template := `
+// package main
+//
+// func main() {
+//
+// }
+// `
+// 	err := writeTemplateToFile(ProjectPath(), "main.go", template, data)
+// 	_ = err
+// 	// if err != nil {
+// 	// 	er(err)
+// 	// }
+// }
